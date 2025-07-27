@@ -86,6 +86,33 @@ const removeTask = async (taskId) => {
   }
   await fetchTasks();
 };
+const editingTask = ref(null);
+const isEditDialogOpen = ref(false);
+
+const startEdit = (task) => {
+  editingTask.value = { ...task }; // copy
+  isEditDialogOpen.value = true;
+};
+
+const saveEdit = async () => {
+  const { error } = await supabaseClient
+    .from('tasks')
+    .update({
+      name: editingTask.value.name,
+      description: editingTask.value.description,
+      due_date: editingTask.value.due_date,
+    })
+    .eq('id', editingTask.value.id);
+
+  if (error) {
+    alert(error.message);
+    return;
+  }
+
+  isEditDialogOpen.value = false;
+  editingTask.value = null;
+  await fetchTasks();
+};
 
 const logout = async () => {
   await supabaseClient.auth.signOut();
@@ -140,22 +167,34 @@ onMounted(async () => {
     >
       <q-list bordered padding class="q-mt-lg">
         <q-item v-for="task in tasks" :key="task.id" clickable>
-          <q-item-section>
-            <q-item-label class="text-weight-bold">{{ task.name }}</q-item-label>
-            <q-item-label caption>{{ task.description }}</q-item-label>
-            <q-item-label caption>Due: {{ task.due_date }}</q-item-label>
-          </q-item-section>
-          <q-item-section side>
-            <q-btn
-              dense
-              color="negative"
-              icon="delete"
-              flat
-              round
-              @click="removeTask(task.id)"
-            />
-          </q-item-section>
-        </q-item>
+        <q-item-section>
+          <q-item-label class="text-weight-bold">{{ task.name }}</q-item-label>
+          <q-item-label caption>{{ task.description }}</q-item-label>
+          <q-item-label caption>Due: {{ task.due_date }}</q-item-label>
+        </q-item-section>
+        <q-item-section side>
+          <q-btn dense color="secondary" icon="edit" flat round @click="startEdit(task)" />
+          <q-btn dense color="negative" icon="delete" flat round @click="removeTask(task.id)" />
+        </q-item-section>
+      </q-item>
+
+      <q-dialog v-model="isEditDialogOpen">
+        <q-card>
+          <q-card-section>
+            <div class="text-h6">Edit Task</div>
+          </q-card-section>
+          <q-card-section class="q-gutter-md" style="height:200px; width: 350px">
+            <q-input v-model="editingTask.name" label="Task Name" outlined dense />
+            <q-input v-model="editingTask.description" label="Description" outlined dense />
+            <q-input v-model="editingTask.due_date" type="date" label="Due Date" outlined dense />
+          </q-card-section>
+          <q-card-actions align="right">
+            <q-btn flat label="Cancel" v-close-popup />
+            <q-btn label="Save" color="primary" @click="saveEdit" />
+          </q-card-actions>
+        </q-card>
+      </q-dialog>
+
         <q-item v-if="tasks.length === 0" class="justify-center">
           No tasks found.
         </q-item>
