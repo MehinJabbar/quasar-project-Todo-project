@@ -43,7 +43,8 @@ const fetchTasks = async () => {
   const { data, error } = await supabaseClient
     .from('tasks')
     .select('*')
-    .eq('user_id', user.id);
+    .eq('user_id', user.id)
+    .order('due_date', { ascending: true }); 
 
   if (error) {
     console.error('Error fetching tasks:', error);
