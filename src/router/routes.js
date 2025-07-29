@@ -18,6 +18,11 @@ const routes = [
         component: () => import('pages/RegisterPage.vue')
       },
       {
+        path: '/task/:id',
+        name: 'details',
+        component: () => import('pages/DetailsPage.vue')
+      },
+      {
         path: 'todo',
         component: () => import('pages/TodoPage.vue'),
         beforeEnter: (to, from, next) => {
